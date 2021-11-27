@@ -5,13 +5,14 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
 const NotValidAuth = require('../errors/not-valid-auth');
 const AlreadyExistsErr = require('../errors/already-exists-err');
+const { errMsg } = require('../utils/const');
 
 const getActiveUser = (req, res, next) => {
   const { _id } = req.user;
   return User.findById(_id)
     .then((user) => {
       if (user) return res.status(200).send(user);
-      throw new NotFoundError('Пользователь не найден');
+      throw new NotFoundError(errMsg.notFoundUser);
     })
     .catch(next);
 };
@@ -23,13 +24,9 @@ const createUser = (req, res, next) => {
     password,
   } = req.body;
 
-  if (!name || !email || !password) {
-    throw new NotValidAuth('Невалидные данные');
-  }
-
   User.findOne({ email })
     .then((user) => {
-      if (user) throw new AlreadyExistsErr('Такой email уже зарегистрирован');
+      if (user) throw new AlreadyExistsErr(errMsg.alreadyExists);
       return bcrypt.hash(password, SALT_ROUND);
     })
     .then((hash) => User.create({
@@ -48,13 +45,9 @@ const createUser = (req, res, next) => {
 const updateUser = (req, res, next) => {
   const { name, email } = req.body;
 
-  if (!name || !email) {
-    throw new NotValidAuth('Невалидные данные');
-  }
-
   User.findOne({ email })
     .then((user) => {
-      if (user) throw new AlreadyExistsErr('Такой email уже зарегистрирован');
+      if (user) throw new AlreadyExistsErr(errMsg.alreadyExists);
     })
     .then(() => User.findByIdAndUpdate(
       req.user._id,
@@ -66,7 +59,7 @@ const updateUser = (req, res, next) => {
     ))
     .then((user) => {
       if (user) return res.status(200).send(user);
-      throw new NotFoundError('Пользователь не найден');
+      throw new NotFoundError(errMsg.notFoundUser);
     })
     .catch(next);
 };
@@ -77,15 +70,15 @@ const login = (req, res, next) => {
     password,
   } = req.body;
 
-  if (!email || !password) throw new NotValidAuth('Невалидные данные при авторизации');
+  if (!email || !password) throw new NotValidAuth(errMsg.notValidData);
 
   User.findOne({ email }).select('+password')
     .then((user) => {
-      if (!user) throw new NotValidAuth('Невалидные данные при авторизации');
+      if (!user) throw new NotValidAuth(errMsg.notValidData);
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            throw new NotValidAuth('Невалидные данные при авторизации');
+            throw new NotValidAuth(errMsg.notValidData);
           }
           const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
           res.send({ token });

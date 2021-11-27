@@ -1,12 +1,13 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../configs/index');
 const NotValidAuth = require('../errors/not-valid-auth');
+const { errMsg } = require('../utils/const');
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    const err = new NotValidAuth('Необходима авторизация');
+    const err = new NotValidAuth(errMsg.authRequired);
     return next(err);
   }
 
@@ -15,7 +16,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, JWT_SECRET);
   } catch (e) {
-    const err = new NotValidAuth('Необходима авторизация');
+    const err = new NotValidAuth(errMsg.authRequired);
     next(err);
   }
 

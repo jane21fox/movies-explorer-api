@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
+const { isURL } = require('validator');
 const NotFoundError = require('../errors/not-found-err');
 const ForbiddenError = require('../errors/forbidden-err');
+const { errMsg } = require('../utils/const');
 
 const movieSchema = new mongoose.Schema({
   country: {
@@ -28,9 +30,9 @@ const movieSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(image) {
-        return /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/gm.test(image);
+        return isURL(image);
       },
-      message: 'Ссылка не соответствует шаблону',
+      message: errMsg.notValidURL,
       statusCode: 400,
     },
   },
@@ -39,9 +41,9 @@ const movieSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(trailer) {
-        return /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/gm.test(trailer);
+        return isURL(trailer);
       },
-      message: 'Ссылка не соответствует шаблону',
+      message: errMsg.notValidURL,
       statusCode: 400,
     },
   },
@@ -50,9 +52,9 @@ const movieSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator(thumbnail) {
-        return /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/gm.test(thumbnail);
+        return isURL(thumbnail);
       },
-      message: 'Ссылка не соответствует шаблону',
+      message: errMsg.notValidURL,
       statusCode: 400,
     },
   },
@@ -80,10 +82,10 @@ movieSchema.statics.defineOwnerAndDelete = function (movieId, userId) {
     .populate(['owner'])
     .then((movie) => {
       if (!movie) {
-        throw new NotFoundError('Фильм не найден');
+        throw new NotFoundError(errMsg.notFoundMovie);
       }
       if (movie.owner._id.valueOf() !== userId) {
-        throw new ForbiddenError('Не достаточно прав для удаления фильма');
+        throw new ForbiddenError(errMsg.actionForbidden);
       }
       return this.findByIdAndRemove(movieId).populate(['owner']);
     });

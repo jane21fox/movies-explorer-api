@@ -1,5 +1,6 @@
 const Movie = require('../models/movie');
 const NotFoundError = require('../errors/not-found-err');
+const { errMsg } = require('../utils/const');
 
 const getMovies = (req, res, next) => {
   const { _id } = req.user;
@@ -14,7 +15,7 @@ const deleteMovie = (req, res, next) => {
   return Movie.defineOwnerAndDelete(movieId, req.user._id)
     .then((movie) => {
       if (movie) return res.status(200).send(movie);
-      throw new NotFoundError('Фильм не найден');
+      throw new NotFoundError(errMsg.notFoundMovie);
     })
     .catch(next);
 };
