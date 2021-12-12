@@ -47,7 +47,8 @@ const updateUser = (req, res, next) => {
 
   User.findOne({ email })
     .then((user) => {
-      if (user) throw new AlreadyExistsErr(errMsg.alreadyExists);
+      if (!user._id.equals(req.user._id)) throw new AlreadyExistsErr(errMsg.alreadyExists);
+      return user;
     })
     .then(() => User.findByIdAndUpdate(
       req.user._id,
