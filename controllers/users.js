@@ -42,25 +42,47 @@ const createUser = (req, res, next) => {
     .catch(next);
 };
 
+// const updateUser = (req, res, next) => {
+//   const { name, email } = req.body;
+
+//   User.findOne({ email })
+//     .then((user) => {
+//       if (!user._id.equals(req.user._id)) throw new AlreadyExistsErr(errMsg.alreadyExists);
+//       return user;
+//     })
+//     .then(() => User.findByIdAndUpdate(
+//       req.user._id,
+//       { name, email },
+//       {
+//         new: true,
+//         runValidators: true,
+//       },
+//     ))
+//     .then((user) => {
+//       if (user) return res.status(200).send(user);
+//       throw new NotFoundError(errMsg.notFoundUser;
+//     })
+//     .catch(next);
+// };
+
 const updateUser = (req, res, next) => {
   const { name, email } = req.body;
 
-  User.findOne({ email })
-    .then((user) => {
-      if (!user._id.equals(req.user._id)) throw new AlreadyExistsErr(errMsg.alreadyExists);
-      return user;
-    })
-    .then(() => User.findByIdAndUpdate(
-      req.user._id,
-      { name, email },
-      {
-        new: true,
-        runValidators: true,
-      },
-    ))
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, email },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
     .then((user) => {
       if (user) return res.status(200).send(user);
       throw new NotFoundError(errMsg.notFoundUser);
+    })
+    .catch((err) => {
+      if (err.code === 11000) return next(new AlreadyExistsErr(errMsg.alreadyExists));
+      return next(err);
     })
     .catch(next);
 };
